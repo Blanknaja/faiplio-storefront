@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ร้านค้า</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; color: #222; }
+    .banner { background: #1d4e3a; color: #fff; padding: 8px 16px; display: flex; gap: 24px; justify-content: center; }
+    header, main, footer { max-width: 960px; margin: 0 auto; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+    .cart { margin-top: 24px; padding: 12px; background: #f5f5f0; border-radius: 8px; }
+    footer { border-top: 1px solid #ddd; margin-top: 24px; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="banner"><span id="bannerShipping"></span><span id="bannerCutoff"></span></div>
+  <header><h1 id="shopName"></h1><p id="tagline"></p></header>
+  <main>
+    <h2 id="productsTitle"></h2>
+    <div class="grid" id="grid"></div>
+    <section class="cart">
+      <h3 id="cartTitle"></h3>
+      <p id="cartEmpty"></p>
+      <p><span id="cartItemsLabel"></span>: <b id="cartCount">0</b></p>
+      <p><span id="cartTotalLabel"></span>: <b id="cartTotal">0</b> <span class="cur"></span></p>
+      <p id="cartShipping"></p>
+      <button id="checkout"></button>
+    </section>
+  </main>
+  <footer>
+    <p id="footReturn"></p>
+    <p id="footWarranty"></p>
+    <p id="footCod"></p>
+    <p id="footContact"></p>
+  </footer>
+  <script>
+    // โหลดข้อความทั้งหมดจาก content/th.json แล้วเติมลงหน้า (ไม่มีข้อความฝังใน HTML)
+    fetch('content/th.json').then(r => r.json()).then(t => {
+      const $ = id => document.getElementById(id);
+      const set = (id, v) => { $(id).textContent = v ?? ''; if (v == null) $(id).hidden = true; };
+      document.title = t.shopName;
+      set('shopName', t.shopName); set('tagline', t.tagline);
+      set('bannerShipping', t.banner.shipping); set('bannerCutoff', t.banner.cutoff);
+      set('productsTitle', t.productsTitle);
+      set('cartTitle', t.cart.title); set('cartEmpty', t.cart.empty);
+      set('cartItemsLabel', t.cart.items); set('cartTotalLabel', t.cart.total);
+      set('cartShipping', t.cart.shippingNote); set('checkout', t.cart.checkout);
+      document.querySelector('.cur').textContent = t.currency;
+      set('footReturn', t.footer.returnPolicy); set('footWarranty', t.footer.warranty);
+      set('footCod', t.footer.cod); set('footContact', t.footer.contact);
+
+      let count = 0, total = 0;
+      const render = () => {
+        $('cartCount').textContent = count;
+        $('cartTotal').textContent = total.toLocaleString('th-TH');
+        $('cartEmpty').hidden = count > 0;
+      };
+      t.products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const h = document.createElement('h3'); h.textContent = p.name;
+        const d = document.createElement('p'); d.textContent = p.desc;
+        const pr = document.createElement('p'); pr.textContent = p.price.toLocaleString('th-TH') + ' ' + t.currency;
+        const b = document.createElement('button'); b.textContent = t.addToCart;
+        b.onclick = () => { count++; total += p.price; render(); };
+        card.append(h, d, pr, b);
+        $('grid').append(card);
+      });
+      render();
+    });
+  </script>
+</body>
+</html>
