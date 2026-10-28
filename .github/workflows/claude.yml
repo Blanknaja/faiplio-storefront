@@ -1,0 +1,38 @@
+name: Claude Code
+
+# ระบบ CS Support RAG เปิด issue (@claude) และ comment ขอแก้เพิ่มใน PR ด้วยบัญชี Blanknaja เท่านั้น
+# repo เป็น public: คนอื่นพิมพ์ @claude แล้ว job ไม่เริ่มเลย (action ปฏิเสธคนไม่มีสิทธิ์เขียนอยู่แล้ว นี่คืออีกชั้น)
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude:
+    if: |
+      github.actor == 'Blanknaja' && (
+        (github.event_name == 'issues' && contains(github.event.issue.body, '@claude')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # เท่ากับ CLAUDE_FIX_RULES.runTimeoutMs ของระบบ
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
